@@ -1,0 +1,7 @@
+{
+  "app_name": "Mega Harness",
+  "port": 80,
+  "workspace_directory": "projetos",
+  "max_file_size_kb": 150,
+  "agent_max_tool_rounds": 8
+}
