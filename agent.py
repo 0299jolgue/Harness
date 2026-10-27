@@ -11,7 +11,7 @@ from typing import Any
 import httpx
 from fastapi import HTTPException
 from workspace import (list_files, file_info, read_file, write_file, edit_file, search_files,
-                       list_archive, read_archive_file, extract_archive,
+                       read_pdf, list_archive, read_archive_file, extract_archive,
                        create_folder, move_file, delete_file, resolve)
 
 MAX_ROUNDS = 8
@@ -19,6 +19,7 @@ TOOLS = [
  {"type":"function","function":{"name":"list_files","description":"Lista ficheiros em projetos/.","parameters":{"type":"object","properties":{"path":{"type":"string","default":"."}},"additionalProperties":False}}},
  {"type":"function","function":{"name":"file_info","description":"Mostra tamanho, extensão e metadados de um ficheiro, incluindo ficheiros grandes.","parameters":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"additionalProperties":False}}},
  {"type":"function","function":{"name":"read_file","description":"Lê um bloco de texto UTF-8 até 8 KB. Para ficheiros grandes, continua usando o next_offset devolvido.","parameters":{"type":"object","properties":{"path":{"type":"string"},"offset":{"type":"integer","default":0},"limit":{"type":"integer","default":8192}},"required":["path"],"additionalProperties":False}}},
+ {"type":"function","function":{"name":"read_pdf","description":"Extrai texto das páginas indicadas de um PDF em projetos/; lê até 3 páginas por chamada.","parameters":{"type":"object","properties":{"path":{"type":"string"},"page":{"type":"integer","default":1},"pages":{"type":"integer","default":1}},"required":["path"],"additionalProperties":False}}},
  {"type":"function","function":{"name":"create_file","description":"Cria um novo ficheiro de texto em projetos/ (máximo 8 MB).","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"],"additionalProperties":False}}},
  {"type":"function","function":{"name":"write_file","description":"Cria ou substitui um ficheiro de texto até 8 MB em projetos/.","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"],"additionalProperties":False}}},
  {"type":"function","function":{"name":"edit_file","description":"Substitui uma única ocorrência de texto num ficheiro até 64 MB.","parameters":{"type":"object","properties":{"path":{"type":"string"},"old_text":{"type":"string"},"new_text":{"type":"string"}},"required":["path","old_text","new_text"],"additionalProperties":False}}},
@@ -48,6 +49,7 @@ def _run_tool(root: Path, name: str, args: dict):
       "list_files":lambda:list_files(root,args.get("path",".")),
       "file_info":lambda:file_info(root,args["path"]),
       "read_file":lambda:read_file(root,args["path"],args.get("offset",0),args.get("limit",24576)),
+      "read_pdf":lambda:read_pdf(root,args["path"],args.get("page",1),args.get("pages",1)),
       "create_file":lambda:write_file(root,args["path"],args["content"],create_only=True),
       "write_file":lambda:write_file(root,args["path"],args["content"]),
       "edit_file":lambda:edit_file(root,args["path"],args["old_text"],args["new_text"]),
@@ -138,7 +140,7 @@ async def _continue(req,root:Path,store:PendingStore,messages,start_round=0,imag
 async def run_agent(req,root:Path,store:PendingStore):
     messages=list(req.messages)
     if not messages or messages[-1].get("role")!="user": raise HTTPException(400,"A mensagem do utilizador está em falta.")
-    system={"role":"system","content":"És o Mega Harness Agent. Usa ferramentas para executar ações. Só podes aceder a projetos/. Ficheiros podem ter até 10 GB; lê os textos em blocos pequenos e usa next_offset para continuar. Para ZIP usa list_archive/read_archive_file ou extract_archive. Imagens em pedidos do utilizador podem ser analisadas se o servidor multimodal estiver configurado. Para pedidos de criação de imagem chama generate_image; se as credenciais não estiverem configuradas, pede ao utilizador que abra Definições > Imagens. Nunca digas que alteraste um ficheiro sem ferramenta. Apagar exige confirmação individual. Não executas comandos do sistema."}
+    system={"role":"system","content":"És o Mega Harness Agent. Usa ferramentas para executar ações. Só podes aceder a projetos/. Ficheiros podem ter até 10 GB; lê os textos em blocos pequenos e usa next_offset para continuar. Para PDF usa read_pdf por páginas. Para ZIP usa list_archive/read_archive_file ou extract_archive. Imagens em pedidos do utilizador podem ser analisadas se o servidor multimodal estiver configurado. Para pedidos de criação de imagem chama generate_image; se as credenciais não estiverem configuradas, pede ao utilizador que abra Definições > Imagens. Nunca digas que alteraste um ficheiro sem ferramenta. Apagar exige confirmação individual. Não executas comandos do sistema."}
     if not messages or messages[0].get("role")!="system": messages.insert(0,system)
     return await _continue(req,root,store,messages)
 

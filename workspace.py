@@ -58,6 +58,29 @@ def read_file(root: Path, path: str, offset: int = 0, limit: int = MAX_AGENT_REA
             "total_bytes": size, "truncated": end < size}
 
 
+def read_pdf(root: Path, path: str, page: int = 1, pages: int = 1):
+    """Extract text from a small page window of a PDF without loading all text into the prompt."""
+    file = resolve(root, path)
+    if not file.is_file() or file.suffix.lower() != ".pdf": raise ValueError("Indica um ficheiro PDF.")
+    if file.stat().st_size > MAX_FILE_BYTES: raise ValueError("PDF excede o limite de 10 GB.")
+    try:
+        from pypdf import PdfReader
+    except ImportError: raise ValueError("Leitura PDF indisponível: instala a dependência pypdf no servidor.") from None
+    reader = PdfReader(str(file), strict=False)
+    if reader.is_encrypted: raise ValueError("O PDF está protegido por palavra-passe.")
+    start = max(1, int(page)); count = max(1, min(int(pages), 3))
+    pieces = []
+    for index in range(start - 1, min(len(reader.pages), start - 1 + count)):
+        text = reader.pages[index].extract_text() or ""
+        pieces.append(f"[Página {index + 1}]\n{text}")
+    result = "\n\n".join(pieces)
+    cap = MAX_AGENT_READ
+    return {"path": file.relative_to(root).as_posix(), "page_count": len(reader.pages),
+            "pages_read": min(count, max(0, len(reader.pages) - start + 1)),
+            "text": result[:cap], "truncated": len(result) > cap,
+            "next_page": start + count if start + count <= len(reader.pages) else None}
+
+
 def write_file(root: Path, path: str, content: str, *, create_only=False):
     file = resolve(root, path)
     data = content.encode("utf-8")

@@ -28,7 +28,7 @@ Para gerar imagens, abre [Z-Image-Turbo-Colab.ipynb](https://colab.research.goog
 
 ## Agent e ficheiros
 
-Uploads são enviados em blocos de 8 MB até ao limite de 10 GB por ficheiro. O Agent lê ficheiros de texto em blocos de 8 KB, pode procurar texto em ficheiros grandes, e tem ferramentas para listar/ler/extrair ZIPs. O conteúdo completo de um ficheiro de 10 GB não cabe numa única mensagem do modelo: o Agent lê partes ou pesquisa só o que precisa. Edição do Agent está limitada a 64 MB; criação/escrita por chamada a 8 MB. O Agent não executa comandos do sistema e só acede a `projetos/`. Apagar continua a exigir aprovação individual.
+Uploads são enviados em blocos de 8 MB até ao limite de 10 GB por ficheiro. O Agent lê ficheiros de texto em blocos de 8 KB, extrai texto de PDFs por páginas, pode procurar texto em ficheiros grandes, e tem ferramentas para listar/ler/extrair ZIPs. O conteúdo completo de um ficheiro de 10 GB não cabe numa única mensagem do modelo: o Agent lê partes ou pesquisa só o que precisa. Edição do Agent está limitada a 64 MB; criação/escrita por chamada a 8 MB. O Agent não executa comandos do sistema e só acede a `projetos/`. Apagar continua a exigir aprovação individual.
 
 O histórico e as configurações dos fornecedores ficam neste navegador. O backend protege a API e os ficheiros com uma sessão autenticada pelo segredo de acesso da app.
 
