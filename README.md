@@ -1,29 +1,36 @@
 # Mega Harness
 
-App de chat com interface escura inspirada em ferramentas de conversa, backend Python/FastAPI e modo Agent para trabalhar exclusivamente em `projetos/`.
+App de chat com backend Python/FastAPI, modo Agent para `projetos/`, anexos em blocos até 10 GB, leitura de texto por partes, inspeção de ZIP e imagens no chat.
 
-## Iniciar no ShardCloud
+## ShardCloud
 
-Cria uma aplicação Python, liga o repositório `0299jolgue/Harness` e configura:
+Liga o repositório `0299jolgue/Harness` a uma app Python e configura:
 
-- **Comando de arranque:** `pip install -r requirements.txt && python app.py`
-- **Host:** `0.0.0.0`
-- **Porta:** usa a variável `PORT` que o ShardCloud fornecer; se não existir, a app usa `80`.
-- **Diretório de trabalho:** raiz do repositório.
+- Arranque: `pip install -r requirements.txt && python app.py`
+- Host: `0.0.0.0`
+- Porta: variável `PORT` do ShardCloud; por omissão usa 80.
+- Diretório de trabalho: raiz do repositório.
+- Segredo estável: cria a variável `MEGA_HARNESS_KEY` no ShardCloud. Se não a definires, a app cria uma chave aleatória a cada arranque e escreve-a uma vez nos logs. Usa-a no primeiro acesso ao site.
 
-A aplicação serve a interface e a API no mesmo serviço. A pasta `projetos/` fica na raiz da app. Em alojamentos com disco efémero, os ficheiros mudam ou desaparecem quando a instância é substituída; ativa armazenamento persistente/mount de volume no ShardCloud se essa opção estiver disponível.
+Ativa armazenamento persistente no ShardCloud se quiseres conservar os ficheiros de `projetos/` entre substituições da instância. A pasta está no servidor ShardCloud; não é uma pasta do iPad.
 
-## Ligar o Qwen do Kaggle
+## Qwen no Kaggle
 
-Abre `Kaggle-Qwen-Base-URL.ipynb`, executa a única célula no Kaggle com GPU e copia a Base URL impressa para **Definições → Fornecedores**. O ID do Qwen já fica preenchido e a chave API é opcional. Deixa a sessão Kaggle ativa enquanto usas a ligação: o URL do Cloudflare é temporário.
+Executa `Kaggle-Qwen-Base-URL.ipynb` com Internet e GPU e copia o endereço para **Definições → Fornecedores**. O notebook descarrega também `mmproj-model-bf16.gguf`: o projetor multimodal é necessário para o llama.cpp aceitar imagens. A primeira transferência/carregamento pode demorar mais. O túnel Cloudflare é temporário e não exige chave nesta versão do notebook; mantém o URL privado.
 
-O endpoint rápido do Kaggle não exige chave API: qualquer pessoa que obtenha o URL temporário pode enviar pedidos ao modelo enquanto a sessão estiver ativa. Não publiques nem partilhes a Base URL. Para fornecedores que exigem autenticação, podes preencher a chave opcional nas definições; fica no `localStorage` do navegador e é enviada ao backend apenas com os pedidos. O backend não a escreve em ficheiros nem regista o corpo dos pedidos.
+Para outro fornecedor, configura a chave API em Definições. A chave fica no navegador e é enviada ao backend apenas com os pedidos.
 
-## Agent
+## Imagens no chat e Z-Image-Turbo
 
-O Agent pode listar, ler, criar, escrever, editar, pesquisar, criar pastas e mover itens em `projetos/`. O backend bloqueia caminhos fora da pasta, ignora ligações simbólicas, limita ficheiros a 150 KB e restringe execuções a oito rondas de ferramentas. Apagar um ficheiro exige aprovação individual na interface. Não executa comandos do sistema. Confirma alterações importantes antes de as usar.
+O botão `+` anexa imagens e outros ficheiros. Imagens são enviadas ao Qwen como entrada visual, desde que o servidor esteja com o `mmproj` carregado. ZIPs podem ser listados, lidos por partes ou extraídos pelo Agent.
 
-As conversas e o fornecedor são guardados no navegador atual. A app não sincroniza histórico entre dispositivos.
+Para gerar imagens, abre [Z-Image-Turbo-Colab.ipynb](https://colab.research.google.com/github/0299jolgue/Harness/blob/main/Z-Image-Turbo-Colab.ipynb), ativa GPU e executa a célula. Copia a Base URL e a chave API mostradas para **Definições → Imagens**. Depois pede ao Agent para criar a imagem; a imagem aparece diretamente na conversa e fica guardada em `projetos/geradas/`. O runtime e o túnel do Colab têm de continuar ligados.
+
+## Agent e ficheiros
+
+Uploads são enviados em blocos de 8 MB até ao limite de 10 GB por ficheiro. O Agent lê ficheiros de texto em blocos de 8 KB, pode procurar texto em ficheiros grandes, e tem ferramentas para listar/ler/extrair ZIPs. O conteúdo completo de um ficheiro de 10 GB não cabe numa única mensagem do modelo: o Agent lê partes ou pesquisa só o que precisa. Edição do Agent está limitada a 64 MB; criação/escrita por chamada a 8 MB. O Agent não executa comandos do sistema e só acede a `projetos/`. Apagar continua a exigir aprovação individual.
+
+O histórico e as configurações dos fornecedores ficam neste navegador. O backend protege a API e os ficheiros com uma sessão autenticada pelo segredo de acesso da app.
 
 ## Desenvolvimento local
 
@@ -31,7 +38,7 @@ As conversas e o fornecedor são guardados no navegador atual. A app não sincro
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python app.py
+MEGA_HARNESS_KEY='escolhe-uma-chave-local' python app.py
 ```
 
-Depois abre `http://localhost:80` (ou a porta definida em `PORT`).
+Abre `http://localhost:80` (ou a porta em `PORT`).
