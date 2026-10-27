@@ -74,7 +74,8 @@ async def _model(req, messages):
             if req.api_key: headers["Authorization"]=f"Bearer {req.api_key}"
             response=await client.post(base+"/chat/completions",json=body,headers=headers)
     except httpx.HTTPError as exc: raise HTTPException(502,f"Falha de ligação ao fornecedor ({type(exc).__name__}).") from None
-    if response.status_code>=400: raise HTTPException(502,"Fornecedor recusou o pedido Agent. Confirma modelo e suporte de ferramentas.")
+    if response.status_code in (401,403): raise HTTPException(502,"Chave API recusada pelo fornecedor. Confirma a chave guardada nas Definições.")
+    if response.status_code>=400: raise HTTPException(502,f"O fornecedor recusou o pedido Agent (HTTP {response.status_code}). Confirma o modelo e o suporte de ferramentas.")
     try:return response.json()
     except ValueError:raise HTTPException(502,"Resposta inválida do fornecedor.") from None
 
