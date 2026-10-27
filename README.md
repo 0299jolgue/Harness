@@ -16,7 +16,7 @@ Ativa armazenamento persistente no ShardCloud se quiseres conservar os ficheiros
 
 ## Qwen no Kaggle
 
-Executa `Kaggle-Qwen-Base-URL.ipynb` com Internet e GPU e copia o endereço para **Definições → Fornecedores**. O notebook descarrega também `mmproj-model-bf16.gguf`: o projetor multimodal é necessário para o llama.cpp aceitar imagens. A primeira transferência/carregamento pode demorar mais. O túnel Cloudflare é temporário e não exige chave nesta versão do notebook; mantém o URL privado.
+Executa `Kaggle-Qwen-Base-URL.ipynb` com Internet e GPU e copia o URL, ID e chave apresentados para **Definições → Fornecedores**. O notebook descarrega também `mmproj-model-bf16.gguf`: o projetor multimodal é necessário para o llama.cpp aceitar imagens. A primeira transferência/carregamento pode demorar mais. O túnel Cloudflare é temporário; mantém o URL e a chave privados.
 
 Para outro fornecedor, configura a chave API em Definições. A chave fica no navegador e é enviada ao backend apenas com os pedidos.
 
