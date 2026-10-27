@@ -1,0 +1,26 @@
+{
+  "chat_provider": {
+    "type": "openai-compatible",
+    "name": "Qwen 3.8 27B Abliterated",
+    "base_url": "",
+    "api_key": "",
+    "model": "qwen3.8-27b-abliterated"
+  },
+  "image_provider": {
+    "type": "z-image-turbo",
+    "name": "Z-Image-Turbo",
+    "base_url": "",
+    "api_key": "",
+    "model": "Tongyi-MAI/Z-Image-Turbo"
+  },
+  "agent": {
+    "enabled": true,
+    "workspace": "projetos",
+    "max_file_size_bytes": 10737418240,
+    "upload_chunk_size_bytes": 8388608
+  },
+  "security": {
+    "store_secrets_in_this_file": false,
+    "note": "Add provider URLs and API keys in Mega Harness settings. Do not commit real keys."
+  }
+}
